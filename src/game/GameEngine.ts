@@ -338,7 +338,6 @@ export class GameEngine {
     this.devUnlocked = true;
     this.campaign.completed = [1,2,3,4,5];
     this.campaign.forged = true;
-    this.showBanner('DEV MODE · Đã mở toàn bộ 6 màn chơi.', 5);
     this.notifyHUD();
   }
 

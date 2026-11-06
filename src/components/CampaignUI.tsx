@@ -30,7 +30,6 @@ export function Notifications({ close }: { close: () => void }) {
   return <div className="modal-backdrop"><div className="panel news-panel"><div className="panel-top"><span className="eyebrow gold">THÔNG BÁO TRÒ CHƠI</span><button className="icon-close" aria-label="Đóng thông báo" onClick={close}><X size={18}/></button></div><h2>Tiếng vọng mới trong rừng</h2>
     <article className="news-feature"><span>MỚI · EMBERFORGE 1.4</span><h3>Thử thách từng chặng</h3><p>Năm màn đầu giờ có đồng hồ 6 giây, bẫy dập, đá rơi và dây leo. Chạm đúng ấn thạch kế tiếp để nạp lại thời gian.</p></article>
     <article><time>06.11.2026</time><div><h3>Sảnh hành trình đã mở</h3><p>Chọn màn, xem tiến độ, điều chỉnh cài đặt và chơi lại bất kỳ màn nào sau khi hoàn thành chiến dịch.</p></div></article>
-    <article><time>MẸO DEV</time><div><h3>Mở nhanh bản đồ kiểm thử</h3><p>Nhấn phím <kbd>Y</kbd> bốn lần liên tiếp để mở toàn bộ sáu màn trong phiên hiện tại.</p></div></article>
   </div></div>;
 }
 
@@ -38,19 +37,18 @@ export function Lobby({ engine, hud }: { engine: GameEngine | null; hud: HUDStat
   const [panel, setPanel] = useState<'none'|'news'|'settings'>('none');
   const complete = engine?.campaign.bossDefeated === true;
   const next = Math.min(hud.completed.length, 5);
-  return <div className="lobby-screen overlay"><div className="lobby-canopy"/><header className="lobby-header"><div><Leaf size={20}/><span><b>SECOND ME</b><small>THE EMBERFORGE</small></span></div><nav><button onClick={()=>setPanel('news')}><Bell size={17}/><i/> THÔNG BÁO</button><button onClick={()=>setPanel('settings')}><Settings size={17}/> CÀI ĐẶT</button></nav></header>
+  return <div className="lobby-screen overlay"><div className="lobby-canopy"/><header className="lobby-header"><div><span className="hero-avatar"><img src={`${import.meta.env.BASE_URL}assets/blue-wizard/idle/00.png`} alt="Nhân vật pháp sư"/></span><span><b>SECOND ME</b><small>THE EMBERFORGE</small></span></div><nav><button onClick={()=>setPanel('news')}><Bell size={17}/><i/> THÔNG BÁO</button><button onClick={()=>setPanel('settings')}><Settings size={17}/> CÀI ĐẶT</button></nav></header>
     <div className="lobby-layout"><aside className="lobby-welcome"><span className="eyebrow gold">TRẠI NGHỈ ECHO</span><h1>{complete ? 'Khu rừng đã thức giấc.' : hud.completed.length ? 'Hành trình vẫn đang gọi.' : 'Lối mòn đầu tiên đang chờ.'}</h1><p>{complete ? 'Toàn bộ ký ức đã được giải phóng. Bạn có thể quay lại bất kỳ màn nào.' : 'Thu hồi năm di vật, rèn Kiếm Echo và đối mặt với Thủ Vệ Rỗng.'}</p>
       {!complete && <button className="primary lobby-continue" onClick={()=>hud.completed.length ? engine?.continueGame() : engine?.selectLevel(0)}><Play size={18}/>{hud.completed.length ? `TIẾP TỤC · MÀN 0${next+1}` : 'BẮT ĐẦU MÀN 01'}</button>}
       {complete && <div className="campaign-seal"><Sword size={24}/><span>CHIẾN DỊCH HOÀN TẤT<small>6 / 6 MÀN ĐÃ MỞ</small></span></div>}
       <button className="text-button new-run" onClick={()=>engine?.startGame()}><RotateCcw size={14}/> HÀNH TRÌNH MỚI</button>
-      {hud.devUnlocked && <div className="dev-badge">DEV MODE · ALL TRAILS UNLOCKED</div>}
     </aside>
     <section className="trail-map"><div className="map-title"><span><Map size={16}/> BẢN ĐỒ LỐI MÒN</span><small>{complete || hud.devUnlocked ? 'CHỌN MÀN ĐỂ CHƠI LẠI' : `${hud.completed.length} / 6 HOÀN THÀNH`}</small></div><div className="trail-grid">{LEVELS.map((level,index)=>{
       const unlocked = hud.devUnlocked || complete || (index <= hud.completed.length && (index < 5 || hud.forged));
       const cleared = index < 5 ? hud.completed.includes(index+1) : complete;
       return <button key={level.id} disabled={!unlocked} className={`map-node node-${index+1} ${cleared?'cleared':''}`} onClick={()=>engine?.selectLevel(index)}><span className="node-number">0{level.id}</span><div><small>{index===5?'BOSS':`CHẶNG ${index+1}`}</small><strong>{level.subtitle}</strong><em>{cleared?'ĐÃ HOÀN THÀNH':unlocked?'SẴN SÀNG':'CHƯA MỞ'}</em></div>{unlocked?<ArrowRight size={17}/>:<Lock size={16}/>}</button>;
     })}</div></section>
-    <aside className="lobby-side"><button className="lobby-card news-card" onClick={()=>setPanel('news')}><Bell size={21}/><span><small>THÔNG BÁO MỚI</small><b>Thử thách 6 giây</b><em>Xem thay đổi trò chơi</em></span><ArrowRight size={16}/></button><div className="relic-card"><Backpack size={20}/><span><small>DI VẬT ĐÃ THU HỒI</small><b>{hud.completed.length} / 5</b></span><div>{MATERIALS.map((m,i)=><i key={m.id} className={hud.completed.includes(i+1)?'found':''}>{m.icon}</i>)}</div></div><div className="dev-hint"><kbd>Y</kbd><kbd>Y</kbd><kbd>Y</kbd><kbd>Y</kbd><span>DEV QUICK UNLOCK</span></div></aside></div>
+    <aside className="lobby-side"><button className="lobby-card news-card" onClick={()=>setPanel('news')}><Bell size={21}/><span><small>THÔNG BÁO MỚI</small><b>Thử thách 6 giây</b><em>Xem thay đổi trò chơi</em></span><ArrowRight size={16}/></button><div className="relic-card"><Backpack size={20}/><span><small>DI VẬT ĐÃ THU HỒI</small><b>{hud.completed.length} / 5</b></span><div>{MATERIALS.map((m,i)=><i key={m.id} className={hud.completed.includes(i+1)?'found':''}>{m.icon}</i>)}</div></div></aside></div>
     {panel==='news'&&<Notifications close={()=>setPanel('none')}/>} {panel==='settings'&&<SettingsPanel engine={engine} hud={hud} close={()=>setPanel('none')}/>}</div>;
 }
 
