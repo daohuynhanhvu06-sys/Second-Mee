@@ -54,11 +54,15 @@ export interface HUDState {
   checkpointCount: number;
   slowed: boolean;
   defeatReason: 'timeout' | 'damage';
+  volume: number;
+  reducedMotion: boolean;
+  showHints: boolean;
+  devUnlocked: boolean;
 }
 
 export class GameEngine {
   // Screen state
-  public screen: GameScreen = 'title';
+  public screen: GameScreen = 'intro';
   public currentLevelIdx: number = 0;
   public currentLevel: LevelData;
 
@@ -97,6 +101,11 @@ export class GameEngine {
   public checkpointIndex = 0;
   public slowed = false;
   public defeatReason: 'timeout' | 'damage' = 'damage';
+  public reducedMotion = false;
+  public showHints = true;
+  public devUnlocked = false;
+  private devKeyCount = 0;
+  private lastDevKeyAt = 0;
 
   // Rendering & audio
   public renderer = new GameRenderer();
@@ -120,8 +129,27 @@ export class GameEngine {
 
   constructor() {
     this.campaign.load();
+    this.loadSettings();
     this.currentLevel = this.cloneLevel(LEVELS[0]);
     this.initPlayer();
+  }
+
+  private loadSettings() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const value = JSON.parse(localStorage.getItem('second-me-settings-v1') ?? '{}');
+      sounds.setMuted(value.muted === true);
+      sounds.setVolume(typeof value.volume === 'number' ? value.volume : 0.25);
+      this.reducedMotion = value.reducedMotion === true;
+      this.showHints = value.showHints !== false;
+      if (typeof document !== 'undefined') document.body.classList.toggle('reduced-motion', this.reducedMotion);
+    } catch { /* Defaults keep the game playable. */ }
+  }
+
+  private saveSettings() {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('second-me-settings-v1', JSON.stringify({
+      muted: sounds.getMuted(), volume: sounds.getVolume(), reducedMotion: this.reducedMotion, showHints: this.showHints,
+    })); } catch { /* Ignore unavailable storage. */ }
   }
 
   private cloneLevel(source: LevelData): LevelData {
@@ -171,12 +199,31 @@ export class GameEngine {
     if (autostart) {
       this.startGame();
     } else {
-      this.screen = 'title';
-      document.body.dataset.state = 'title';
+      this.screen = 'intro';
+      document.body.dataset.state = 'intro';
       this.notifyHUD();
     }
     this.lastTimestamp = performance.now();
     this.loop(this.lastTimestamp);
+  }
+
+  public openLobby() {
+    this.screen = 'loading';
+    this.heldKeys.clear();
+    document.body.dataset.state = 'loading';
+    this.notifyHUD();
+  }
+
+  public finishLoading() {
+    if (this.screen !== 'loading') return;
+    this.goToLobby();
+  }
+
+  public goToLobby() {
+    this.screen = 'lobby';
+    this.heldKeys.clear();
+    document.body.dataset.state = 'lobby';
+    this.notifyHUD();
   }
 
   public stop() {
@@ -197,7 +244,7 @@ export class GameEngine {
   }
 
   public continueGame() {
-    if (this.campaign.bossDefeated) { this.screen = 'ending'; this.notifyHUD(); return; }
+    if (this.campaign.bossDefeated) { this.goToLobby(); return; }
     if (this.campaign.canForge) {
       this.currentLevelIdx = 4;
       this.restartLevel();
@@ -265,7 +312,8 @@ export class GameEngine {
   }
 
   public selectLevel(idx: number) {
-    if (idx > this.campaign.unlockedLevel || (idx === 5 && !this.campaign.forged)) return;
+    const campaignComplete = this.campaign.bossDefeated;
+    if (!this.devUnlocked && !campaignComplete && (idx > this.campaign.unlockedLevel || (idx === 5 && !this.campaign.forged))) return;
     if (idx >= 0 && idx < LEVELS.length) {
       this.currentLevelIdx = idx;
       this.restartLevel();
@@ -275,14 +323,24 @@ export class GameEngine {
     }
   }
 
-  public goToTitle() {
-    this.screen = 'title';
-    this.heldKeys.clear();
-    document.body.dataset.state = 'title';
+  public goToTitle() { this.goToLobby(); }
+
+  public toggleAudio() { sounds.toggleMute(); this.saveSettings(); this.notifyHUD(); }
+  public setVolume(value: number) { sounds.setVolume(value); this.saveSettings(); this.notifyHUD(); }
+  public setReducedMotion(value: boolean) {
+    this.reducedMotion = value;
+    if (typeof document !== 'undefined') document.body.classList.toggle('reduced-motion', value);
+    this.saveSettings(); this.notifyHUD();
+  }
+  public setShowHints(value: boolean) { this.showHints = value; this.saveSettings(); this.notifyHUD(); }
+
+  public unlockDevMode() {
+    this.devUnlocked = true;
+    this.campaign.completed = [1,2,3,4,5];
+    this.campaign.forged = true;
+    this.showBanner('DEV MODE · Đã mở toàn bộ 6 màn chơi.', 5);
     this.notifyHUD();
   }
-
-  public toggleAudio() { sounds.toggleMute(); this.notifyHUD(); }
 
   public forgeWeapon() {
     if (this.screen !== 'forge' || !this.campaign.forge()) return;
@@ -446,6 +504,14 @@ export class GameEngine {
     const key = e.key.toLowerCase();
     const code = e.code;
 
+    if (key === 'y') {
+      const now = performance.now();
+      this.devKeyCount = now - this.lastDevKeyAt <= 2500 ? this.devKeyCount + 1 : 1;
+      this.lastDevKeyAt = now;
+      if (this.devKeyCount >= 4) { this.devKeyCount = 0; this.unlockDevMode(); }
+      return;
+    }
+
     if (this.screen === 'forge') {
       if (code === 'Enter') this.campaign.forged ? this.enterBoss() : this.forgeWeapon();
       return;
@@ -460,12 +526,14 @@ export class GameEngine {
     }
 
     // Title screen start
-    if (this.screen === 'title') {
+    if (this.screen === 'intro') {
       if (code === 'Enter' || code === 'Space') {
-        this.startGame();
+        this.openLobby();
       }
       return;
     }
+    if (this.screen === 'loading') return;
+    if (this.screen === 'lobby') return;
 
     // Victory screen start next
     if (this.screen === 'victory') {
@@ -487,8 +555,7 @@ export class GameEngine {
 
     // Mute toggle
     if (key === 'm') {
-      sounds.toggleMute();
-      this.notifyHUD();
+      this.toggleAudio();
       return;
     }
 
@@ -851,6 +918,10 @@ export class GameEngine {
         checkpointCount: this.currentLevel.plates.length,
         slowed: this.slowed,
         defeatReason: this.defeatReason,
+        volume: sounds.getVolume(),
+        reducedMotion: this.reducedMotion,
+        showHints: this.showHints,
+        devUnlocked: this.devUnlocked,
       });
     }
   }

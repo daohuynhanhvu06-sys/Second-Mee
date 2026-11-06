@@ -170,3 +170,42 @@ test('an animation frame timestamp before startup cannot move the game clock bac
   clock.loop(99);
   assert.equal(clock.elapsedLevelTime,0);
 });
+
+test('intro opens loading lobby without resetting saved progress', t => {
+  const document = mockDocument(t);
+  const engine = new GameEngine();
+  engine.campaign.completed = [1,2];
+  engine.openLobby();
+  assert.equal(engine.screen,'loading');
+  assert.equal(document.body.dataset.state,'loading');
+  engine.finishLoading();
+  assert.equal(engine.screen,'lobby');
+  assert.deepEqual(engine.campaign.completed,[1,2]);
+});
+
+test('pressing Y four times unlocks every trail for the current dev session', t => {
+  mockDocument(t);
+  const engine = new GameEngine();
+  engine.screen='lobby';
+  const controls=engine as unknown as {handleKeyDown(event:KeyboardEvent):void};
+  const event={key:'y',code:'KeyY',repeat:false,preventDefault(){}} as KeyboardEvent;
+  for(let i=0;i<3;i++)controls.handleKeyDown(event);
+  assert.equal(engine.devUnlocked,false);
+  controls.handleKeyDown(event);
+  assert.equal(engine.devUnlocked,true);
+  assert.deepEqual(engine.campaign.completed,[1,2,3,4,5]);
+  assert.equal(engine.campaign.forged,true);
+  engine.selectLevel(5);
+  assert.equal(engine.currentLevelIdx,5);
+  assert.equal(engine.screen,'playing');
+});
+
+test('completed campaign can replay any level from lobby',t=>{
+  mockDocument(t);
+  const engine=new GameEngine();
+  engine.campaign.completed=[1,2,3,4,5];engine.campaign.forged=true;engine.campaign.bossDefeated=true;
+  engine.goToLobby();engine.selectLevel(1);
+  assert.equal(engine.currentLevelIdx,1);assert.equal(engine.screen,'playing');
+  engine.goToLobby();engine.selectLevel(5);
+  assert.equal(engine.currentLevelIdx,5);assert.ok(engine.boss);
+});

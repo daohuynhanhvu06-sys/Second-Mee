@@ -1,8 +1,58 @@
 import React, { useState } from 'react';
-import { ArrowRight, RotateCcw, Home, Pause, Volume2, VolumeX, Lock, Sword, Hammer, Check, Shield, Flame, Backpack } from 'lucide-react';
+import { ArrowRight, RotateCcw, Home, Pause, Volume2, VolumeX, Lock, Sword, Hammer, Check, Shield, Flame, Backpack, Bell, Settings, Map, Play, Leaf, X, SlidersHorizontal } from 'lucide-react';
 import type { GameEngine, HUDState } from '../game/GameEngine.ts';
 import { MATERIALS } from '../game/logic/campaign.ts';
 import { LEVELS } from '../game/logic/levels.ts';
+
+export function Intro({ engine }: { engine: GameEngine | null }) {
+  return <div className="intro-screen overlay"><div className="mist mist-one"/><div className="mist mist-two"/>
+    <div className="intro-mark"><Leaf size={28}/><span>THE ANCIENT PATH REMEMBERS</span></div>
+    <div className="intro-copy"><span className="eyebrow gold">CHAPTER II · THE EMBERFORGE</span><h1>SECOND<br/><em>ME</em></h1><p>Echoes of the Wild</p>
+      <button className="intro-enter" onClick={() => engine?.openLobby()}>BƯỚC VÀO KHU RỪNG <ArrowRight size={18}/></button><small>ENTER / SPACE</small></div>
+    <div className="intro-runes">◇　✦　◈　✺　◆</div>
+  </div>;
+}
+
+export function Loading() {
+  return <div className="loading-screen overlay"><div className="loading-sigil"><Leaf size={34}/><i/><i/><i/></div><span className="eyebrow gold">ĐANG ĐÁNH THỨC KHU RỪNG</span><h2>Những lối mòn đang hiện ra...</h2><div className="loading-line"><i/></div><p>Chuẩn bị Echo và lắng nghe ký ức.</p></div>;
+}
+
+export function SettingsPanel({ engine, hud, close }: { engine: GameEngine | null; hud: HUDState; close: () => void }) {
+  return <div className="modal-backdrop"><div className="panel settings-panel"><div className="panel-top"><span className="eyebrow gold">CÀI ĐẶT TRÒ CHƠI</span><button className="icon-close" aria-label="Đóng cài đặt" onClick={close}><X size={18}/></button></div><h2>Điều chỉnh trải nghiệm</h2>
+    <label className="setting-row"><span><Volume2 size={18}/><b>Âm lượng</b><small>Âm thanh hiệu ứng và môi trường</small></span><input aria-label="Âm lượng" type="range" min="0" max="1" step="0.05" value={hud.volume} onChange={e=>engine?.setVolume(Number(e.target.value))}/><strong>{Math.round(hud.volume*100)}%</strong></label>
+    <label className="setting-row switch-row"><span><VolumeX size={18}/><b>Tắt âm</b><small>Tắt toàn bộ âm thanh trò chơi</small></span><input type="checkbox" checked={hud.isMuted} onChange={()=>engine?.toggleAudio()}/><i/></label>
+    <label className="setting-row switch-row"><span><SlidersHorizontal size={18}/><b>Giảm chuyển động</b><small>Giảm sương, rung và hiệu ứng lặp</small></span><input type="checkbox" checked={hud.reducedMotion} onChange={e=>engine?.setReducedMotion(e.target.checked)}/><i/></label>
+    <label className="setting-row switch-row"><span><Map size={18}/><b>Hướng dẫn trong màn</b><small>Hiện nhãn bẫy và gợi ý điều khiển</small></span><input type="checkbox" checked={hud.showHints} onChange={e=>engine?.setShowHints(e.target.checked)}/><i/></label>
+    <button className="primary" onClick={close}>LƯU & ĐÓNG</button></div></div>;
+}
+
+export function Notifications({ close }: { close: () => void }) {
+  return <div className="modal-backdrop"><div className="panel news-panel"><div className="panel-top"><span className="eyebrow gold">THÔNG BÁO TRÒ CHƠI</span><button className="icon-close" aria-label="Đóng thông báo" onClick={close}><X size={18}/></button></div><h2>Tiếng vọng mới trong rừng</h2>
+    <article className="news-feature"><span>MỚI · EMBERFORGE 1.4</span><h3>Thử thách từng chặng</h3><p>Năm màn đầu giờ có đồng hồ 6 giây, bẫy dập, đá rơi và dây leo. Chạm đúng ấn thạch kế tiếp để nạp lại thời gian.</p></article>
+    <article><time>06.11.2026</time><div><h3>Sảnh hành trình đã mở</h3><p>Chọn màn, xem tiến độ, điều chỉnh cài đặt và chơi lại bất kỳ màn nào sau khi hoàn thành chiến dịch.</p></div></article>
+    <article><time>MẸO DEV</time><div><h3>Mở nhanh bản đồ kiểm thử</h3><p>Nhấn phím <kbd>Y</kbd> bốn lần liên tiếp để mở toàn bộ sáu màn trong phiên hiện tại.</p></div></article>
+  </div></div>;
+}
+
+export function Lobby({ engine, hud }: { engine: GameEngine | null; hud: HUDState }) {
+  const [panel, setPanel] = useState<'none'|'news'|'settings'>('none');
+  const complete = engine?.campaign.bossDefeated === true;
+  const next = Math.min(hud.completed.length, 5);
+  return <div className="lobby-screen overlay"><div className="lobby-canopy"/><header className="lobby-header"><div><Leaf size={20}/><span><b>SECOND ME</b><small>THE EMBERFORGE</small></span></div><nav><button onClick={()=>setPanel('news')}><Bell size={17}/><i/> THÔNG BÁO</button><button onClick={()=>setPanel('settings')}><Settings size={17}/> CÀI ĐẶT</button></nav></header>
+    <div className="lobby-layout"><aside className="lobby-welcome"><span className="eyebrow gold">TRẠI NGHỈ ECHO</span><h1>{complete ? 'Khu rừng đã thức giấc.' : hud.completed.length ? 'Hành trình vẫn đang gọi.' : 'Lối mòn đầu tiên đang chờ.'}</h1><p>{complete ? 'Toàn bộ ký ức đã được giải phóng. Bạn có thể quay lại bất kỳ màn nào.' : 'Thu hồi năm di vật, rèn Kiếm Echo và đối mặt với Thủ Vệ Rỗng.'}</p>
+      {!complete && <button className="primary lobby-continue" onClick={()=>hud.completed.length ? engine?.continueGame() : engine?.selectLevel(0)}><Play size={18}/>{hud.completed.length ? `TIẾP TỤC · MÀN 0${next+1}` : 'BẮT ĐẦU MÀN 01'}</button>}
+      {complete && <div className="campaign-seal"><Sword size={24}/><span>CHIẾN DỊCH HOÀN TẤT<small>6 / 6 MÀN ĐÃ MỞ</small></span></div>}
+      <button className="text-button new-run" onClick={()=>engine?.startGame()}><RotateCcw size={14}/> HÀNH TRÌNH MỚI</button>
+      {hud.devUnlocked && <div className="dev-badge">DEV MODE · ALL TRAILS UNLOCKED</div>}
+    </aside>
+    <section className="trail-map"><div className="map-title"><span><Map size={16}/> BẢN ĐỒ LỐI MÒN</span><small>{complete || hud.devUnlocked ? 'CHỌN MÀN ĐỂ CHƠI LẠI' : `${hud.completed.length} / 6 HOÀN THÀNH`}</small></div><div className="trail-grid">{LEVELS.map((level,index)=>{
+      const unlocked = hud.devUnlocked || complete || (index <= hud.completed.length && (index < 5 || hud.forged));
+      const cleared = index < 5 ? hud.completed.includes(index+1) : complete;
+      return <button key={level.id} disabled={!unlocked} className={`map-node node-${index+1} ${cleared?'cleared':''}`} onClick={()=>engine?.selectLevel(index)}><span className="node-number">0{level.id}</span><div><small>{index===5?'BOSS':`CHẶNG ${index+1}`}</small><strong>{level.subtitle}</strong><em>{cleared?'ĐÃ HOÀN THÀNH':unlocked?'SẴN SÀNG':'CHƯA MỞ'}</em></div>{unlocked?<ArrowRight size={17}/>:<Lock size={16}/>}</button>;
+    })}</div></section>
+    <aside className="lobby-side"><button className="lobby-card news-card" onClick={()=>setPanel('news')}><Bell size={21}/><span><small>THÔNG BÁO MỚI</small><b>Thử thách 6 giây</b><em>Xem thay đổi trò chơi</em></span><ArrowRight size={16}/></button><div className="relic-card"><Backpack size={20}/><span><small>DI VẬT ĐÃ THU HỒI</small><b>{hud.completed.length} / 5</b></span><div>{MATERIALS.map((m,i)=><i key={m.id} className={hud.completed.includes(i+1)?'found':''}>{m.icon}</i>)}</div></div><div className="dev-hint"><kbd>Y</kbd><kbd>Y</kbd><kbd>Y</kbd><kbd>Y</kbd><span>DEV QUICK UNLOCK</span></div></aside></div>
+    {panel==='news'&&<Notifications close={()=>setPanel('none')}/>} {panel==='settings'&&<SettingsPanel engine={engine} hud={hud} close={()=>setPanel('none')}/>}</div>;
+}
 
 export function SwordArt({ large = false }: { large?: boolean }) {
   return <svg viewBox="0 0 100 210" className={large ? 'sword-art large' : 'sword-art'} aria-label="Kiếm Echo">
@@ -52,10 +102,11 @@ export function Title({ engine, hud }: { engine: GameEngine | null; hud: HUDStat
 
 export function AdventureHUD({ engine, hud }: { engine: GameEngine | null; hud: HUDState }) {
   const [bag, setBag] = useState(false);
+  const [settings, setSettings] = useState(false);
   const boss = hud.bossHp > 0;
   return <div className="adventure-hud overlay">
     <div className="hud-top"><div className="level-card"><small>{hud.levelName} / 06</small><strong>{hud.levelSubtitle}</strong><span>{Math.floor(hud.elapsedLevelTime / 60).toString().padStart(2,'0')}:{Math.floor(hud.elapsedLevelTime % 60).toString().padStart(2,'0')} <i/> <span className="hearts" aria-label={`${hud.health} trên 5 máu`}>{'♥'.repeat(hud.health)}<em>{'♡'.repeat(5-hud.health)}</em></span></span></div>
-      <div className="hud-tools"><button aria-label="Túi nguyên liệu" title="Túi nguyên liệu" onClick={() => setBag(!bag)}><Backpack size={17}/><span>{hud.forged ? <Sword size={13}/> : `${hud.completed.length}/5`}</span></button><button aria-label="Bật tắt âm thanh" onClick={() => engine?.toggleAudio()}>{hud.isMuted ? <VolumeX size={17}/> : <Volume2 size={17}/>}</button><button aria-label="Chơi lại màn" onClick={() => engine?.restartLevel()}><RotateCcw size={17}/></button><button aria-label="Tạm dừng" onClick={() => engine?.pauseGame()}><Pause size={17}/></button></div>
+      <div className="hud-tools"><button aria-label="Túi nguyên liệu" title="Túi nguyên liệu" onClick={() => setBag(!bag)}><Backpack size={17}/><span>{hud.forged ? <Sword size={13}/> : `${hud.completed.length}/5`}</span></button><button aria-label="Cài đặt" onClick={() => setSettings(true)}><Settings size={17}/></button><button aria-label="Bật tắt âm thanh" onClick={() => engine?.toggleAudio()}>{hud.isMuted ? <VolumeX size={17}/> : <Volume2 size={17}/>}</button><button aria-label="Chơi lại màn" onClick={() => engine?.restartLevel()}><RotateCcw size={17}/></button><button aria-label="Tạm dừng" onClick={() => engine?.pauseGame()}><Pause size={17}/></button></div>
     </div>
     {hud.legTimeRemaining !== null && <div className={'leg-clock ' + (hud.legTimeRemaining <= 2 ? 'urgent' : '')} role="timer" aria-label="Thời gian đến điểm kế tiếp"><div><span>{hud.checkpointIndex < hud.checkpointCount ? `ĐẾN ẤN THẠCH ${hud.checkpointIndex+1} / ${hud.checkpointCount}` : 'ĐẾN CỔNG THOÁT'}</span><strong>{hud.legTimeRemaining.toFixed(1)}<small>s</small></strong></div><div className="leg-track"><i style={{width: `${hud.legTimeRemaining/6*100}%`}}/></div><p>{hud.slowed ? 'DÂY LEO · TỐC ĐỘ −45%' : 'Điểm mới +6s · Echo giữ cổng'}</p></div>}
     {boss && <div className="boss-bar"><div><span>THỦ VỆ RỖNG</span><small>{hud.bossHp} / 240 · GIAI ĐOẠN {hud.bossPhase} / 3</small></div><div className="health-track" role="progressbar" aria-label="Máu boss" aria-valuenow={hud.bossHp} aria-valuemin={0} aria-valuemax={240}><i style={{ width: `${hud.bossHp/240*100}%` }}/></div></div>}
@@ -66,7 +117,8 @@ export function AdventureHUD({ engine, hud }: { engine: GameEngine | null; hud: 
       <button onClick={() => engine?.spawnEcho()}><kbd>E</kbd><span>{hud.echoCount ? 'GỌI LẠI ECHO' : 'GỌI ECHO'}<small>{hud.echoStatus === 'finished' ? 'Đang giữ vị trí' : hud.echoStatus === 'replaying' ? 'Đang phát lại' : 'Bản sao của quá khứ'}</small></span></button>
       {hud.echoCount > 0 && <button className="compact" title="Xóa Echo" onClick={() => engine?.dismissEcho()}><kbd>Q</kbd></button>}
       {boss && <><button className="combat-action" onClick={() => engine?.attack()}><Sword size={20}/><span>CHÉM <kbd>J</kbd><small>{hud.attackCooldown > 0 ? 'Hồi đòn…' : 'Kiếm Echo'}</small></span></button><button onClick={() => engine?.dodge()}><Shield size={20}/><span>LƯỚT <kbd>Shift</kbd><small>{hud.dodgeCooldown > 0 ? `${hud.dodgeCooldown.toFixed(1)}s` : 'Sẵn sàng'}</small></span></button></>}
-    </div><p>WASD / ↑↓←→ di chuyển <span>·</span> {boss ? 'J / Space chém · Shift né' : 'R ghi · E gọi Echo · Q xóa'} <span>·</span> Esc tạm dừng</p></div>
+    </div>{hud.showHints && <p>WASD / ↑↓←→ di chuyển <span>·</span> {boss ? 'J / Space chém · Shift né' : 'R ghi · E gọi Echo · Q xóa'} <span>·</span> Esc tạm dừng</p>}</div>
+    {settings && <SettingsPanel engine={engine} hud={hud} close={()=>setSettings(false)}/>} 
   </div>;
 }
 
@@ -93,5 +145,5 @@ export function Forge({ engine, hud }: { engine: GameEngine | null; hud: HUDStat
 
 export function EndScreen({ engine, hud }: { engine: GameEngine | null; hud: HUDState }) {
   const won = hud.screen === 'ending';
-  return <div className="modal-backdrop"><div className="panel ending-panel"><div className="ending-emblem">{won ? <SwordArt/> : <Shield size={56}/>}</div><span className="eyebrow gold">{won ? 'HÀNH TRÌNH HOÀN TẤT / 06' : 'KÝ ỨC VẪN CÒN Ở ĐÂY'}</span><h2>{won ? 'Khu rừng thức giấc.' : hud.defeatReason === 'timeout' ? 'Hết thời gian.' : 'Đứng dậy lần nữa.'}</h2><p className="muted">{won ? 'Thủ Vệ Rỗng đã gục ngã. Từ năm mảnh di vật, bạn đã rèn nên một khởi đầu mới.' : hud.defeatReason === 'timeout' ? 'Bạn có 6 giây cho mỗi chặng. Chạm ấn thạch theo số để nạp lại giờ; dùng Echo giữ cổng và tránh dây leo. Di vật đã thu thập vẫn được giữ lại.' : engine?.boss ? 'Nguyên liệu và thanh kiếm vẫn được giữ lại. Đợi vòng báo đòn xuất hiện, rồi lướt ra ngoài để phản công.' : 'Di vật đã thu thập vẫn được giữ lại. Tránh vùng bẫy khi viền vàng báo trước; dây leo làm chậm nhưng không mất máu.'}</p><button className="primary" onClick={() => won ? engine?.startGame() : engine?.restartLevel()}><RotateCcw size={18}/>{won ? 'CHƠI LẠI TỪ ĐẦU' : 'THỬ LẠI'}</button><button className="text-button" onClick={() => engine?.goToTitle()}>VỀ MENU</button></div></div>;
+  return <div className="modal-backdrop"><div className="panel ending-panel"><div className="ending-emblem">{won ? <SwordArt/> : <Shield size={56}/>}</div><span className="eyebrow gold">{won ? 'HÀNH TRÌNH HOÀN TẤT / 06' : 'KÝ ỨC VẪN CÒN Ở ĐÂY'}</span><h2>{won ? 'Khu rừng thức giấc.' : hud.defeatReason === 'timeout' ? 'Hết thời gian.' : 'Đứng dậy lần nữa.'}</h2><p className="muted">{won ? 'Thủ Vệ Rỗng đã gục ngã. Toàn bộ sáu màn giờ đã mở trong sảnh để bạn tự do chơi lại.' : hud.defeatReason === 'timeout' ? 'Bạn có 6 giây cho mỗi chặng. Chạm ấn thạch theo số để nạp lại giờ; dùng Echo giữ cổng và tránh dây leo. Di vật đã thu thập vẫn được giữ lại.' : engine?.boss ? 'Nguyên liệu và thanh kiếm vẫn được giữ lại. Đợi vòng báo đòn xuất hiện, rồi lướt ra ngoài để phản công.' : 'Di vật đã thu thập vẫn được giữ lại. Tránh vùng bẫy khi viền vàng báo trước; dây leo làm chậm nhưng không mất máu.'}</p><button className="primary" onClick={() => won ? engine?.goToLobby() : engine?.restartLevel()}>{won ? <><Map size={18}/> VỀ SẢNH CHỌN MÀN</> : <><RotateCcw size={18}/> THỬ LẠI</>}</button>{won && <button className="secondary" onClick={()=>engine?.startGame()}><RotateCcw size={16}/> HÀNH TRÌNH MỚI</button>}<button className="text-button" onClick={() => engine?.goToLobby()}>VỀ SẢNH</button></div></div>;
 }

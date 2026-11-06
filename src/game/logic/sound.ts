@@ -7,6 +7,7 @@ class SoundEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
   private masterGain: GainNode | null = null;
+  private volume = 0.25;
 
   private initCtx() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -14,7 +15,7 @@ class SoundEngine {
       if (AudioCtx) {
         this.ctx = new AudioCtx();
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.25, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
         this.masterGain.connect(this.ctx.destination);
       }
     }
@@ -26,13 +27,20 @@ class SoundEngine {
   public setMuted(muted: boolean) {
     this.isMuted = muted;
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(muted ? 0 : 0.25, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(muted ? 0 : this.volume, this.ctx.currentTime);
     }
   }
 
   public getMuted(): boolean {
     return this.isMuted;
   }
+
+  public setVolume(value: number) {
+    this.volume = Math.max(0, Math.min(1, value));
+    if (this.masterGain && this.ctx) this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime);
+  }
+
+  public getVolume() { return this.volume; }
 
   public toggleMute(): boolean {
     this.setMuted(!this.isMuted);

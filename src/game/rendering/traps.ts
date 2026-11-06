@@ -1,7 +1,7 @@
 import type { Trap } from '../logic/types.ts';
 import { trapPhase } from '../logic/traps.ts';
 
-export function drawTrap(ctx: CanvasRenderingContext2D, trap: Trap, time: number) {
+export function drawTrap(ctx: CanvasRenderingContext2D, trap: Trap, time: number, showLabel = true) {
   const { x, y, width: w, height: h, kind } = trap;
   const phase = trapPhase(trap, time);
   const warning = phase === 'warning', impact = phase === 'impact';
@@ -46,8 +46,10 @@ export function drawTrap(ctx: CanvasRenderingContext2D, trap: Trap, time: number
       for(const [xx,yy] of [[.3,.4],[.65,.6],[.5,.3]]) ctx.fillRect(w*xx,h*yy,7,5);
     }
   }
-  ctx.textAlign = 'center'; ctx.font = 'bold 10px sans-serif';
-  ctx.fillStyle = warning ? '#ffe0a3' : impact ? '#ffb399' : '#d2dbc3';
-  ctx.fillText(kind === 'vines' ? 'DÂY LEO' : warning ? 'CẨN THẬN!' : kind === 'crusher' ? 'BẪY DẬP' : 'ĐÁ RƠI', w/2, h+14);
+  if (showLabel) {
+    ctx.textAlign = 'center'; ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = warning ? '#ffe0a3' : impact ? '#ffb399' : '#d2dbc3';
+    ctx.fillText(kind === 'vines' ? 'DÂY LEO' : warning ? 'CẨN THẬN!' : kind === 'crusher' ? 'BẪY DẬP' : 'ĐÁ RƠI', w/2, h+14);
+  }
   ctx.restore();
 }

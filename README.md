@@ -1,14 +1,16 @@
 # SECOND ME — The Emberforge
 
-Game giải đố hành động bằng React, TypeScript và Vite.
+Game giải đố hành động bằng React, TypeScript và Vite, sử dụng Echo để ghi và phát lại đường đi.
 
 ## Nội dung
 
-- 5 màn giải đố dùng Echo để giữ ấn thạch và mở cổng.
-- Mỗi chặng có giới hạn 6 giây; chạm đúng ấn thạch kế tiếp để nạp lại thời gian.
-- Bẫy dập, đá rơi và dây leo làm chậm tăng dần theo từng màn.
+- Intro, màn tải và lobby rừng để chọn màn.
+- 5 màn giải đố có giới hạn 6 giây cho từng chặng.
+- Bẫy dập, đá rơi và dây leo làm chậm.
 - Thu thập 5 di vật, rèn Kiếm Echo và đánh boss ở màn 6.
-- Tiến độ được lưu trong trình duyệt.
+- Trung tâm thông báo và cài đặt âm lượng, tắt âm, giảm chuyển động, hướng dẫn.
+- Hoàn thành chiến dịch sẽ mở cả 6 màn để tự do chơi lại.
+- Nhấn `Y` bốn lần liên tiếp để mở toàn bộ màn trong phiên kiểm thử hiện tại.
 
 ## Chạy dự án
 
@@ -38,4 +40,4 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
-Hiện có 40 bài kiểm tra tự động cho Echo, cổng, bẫy, đồng hồ, chiến dịch và boss.
+Hiện có 43 bài kiểm tra tự động cho Echo, cổng, bẫy, đồng hồ, lobby, dev unlock, chiến dịch và boss.

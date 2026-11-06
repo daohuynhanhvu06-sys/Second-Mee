@@ -3,7 +3,7 @@ import { drawTrap } from './traps.ts';
 
 export function renderAdventure(ctx: CanvasRenderingContext2D, game: GameEngine, time: number) {
   ctx.save();
-  for (const trap of game.currentLevel.traps ?? []) drawTrap(ctx, trap, time);
+  for (const trap of game.currentLevel.traps ?? []) drawTrap(ctx, trap, time, game.showHints);
   if (game.legTimeRemaining !== null) {
     game.currentLevel.plates.forEach((plate, index) => {
       const current = index === game.checkpointIndex;
